@@ -217,7 +217,7 @@ while (True):
             currentState = EXIT_STATE
             start = time.time()
     elif currentState == ENTRY_STATE:
-        if time.time() - start > 1.5:
+        if time.time() - start > 1.0:
             print('TIMEOUT')
             currentState = IDLE_STATE
         if sensor2_distance < threshold:
@@ -227,7 +227,7 @@ while (True):
             time.sleep(.5)
             start = time.time()
     elif currentState == EXIT_STATE:
-        if time.time() - start > 1.5:
+        if time.time() - start > 1.0:
             print('TIMEOUT')
             currentState = IDLE_STATE
         if sensor1_distance < threshold:
