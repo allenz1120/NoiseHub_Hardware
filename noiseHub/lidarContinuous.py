@@ -11,7 +11,9 @@ DISTANCE_OUTPUT = 0x8f # R: Distance measurement in cm (2 Bytes)
 VELOCITY_OUTPUT = 0x09 # R: Velocity measurement in cm/s (1 Byte, 2's complement)
 POWER_CONTROL = 0x65 # R/W: Configure power mode of the device
 SIG_COUNT_VAL = 0x02 # R/W: Max times a pulse can be sent
-
+IDLE_STATE = 0
+ENTRY_STATE = 1
+EXIT_STATE = 2
 
 """
 Interface for the Garmin Lidar-Lite v3
@@ -190,6 +192,29 @@ def getDistance():
     return({"distance":sensor1.read_distance(True)/100})
 
 sensor1 = Lidar()
+sensor2 = Lidar(SMBus(4))
+currentState = IDLE_STATE
+
 while (True):
     print({"distance":sensor1.read_distance(True)/100})
-    time.sleep(0.5)
+    print({"distance":sensor2.read_distance(True)/100})
+    sensor1_distance = sensor1.read_distance(True)/100
+    sensor2_distance = sensor2.read_distance(True)/100
+
+    if currentState == IDLE_STATE:
+        if (sensor1_distance < 180):
+            print("ENTRANCE STARTED")
+            currentState = ENTRY_STATE
+        if (sensor2_distance < 180):
+            print("EXIT STARTED")
+            currentState = EXIT_STATE
+    elif currentState == ENTRY_STATE:
+        print("+1")
+        currentState = IDLE_STATE
+        time.sleep(0.6)
+    elif currentState == EXIT_STATE:
+        print("-1")
+        currentState = IDLE_STATE
+        time.sleep(0.6)
+
+    time.sleep(0.05)

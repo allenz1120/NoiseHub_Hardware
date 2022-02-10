@@ -196,18 +196,21 @@ def getDistance():
 sensor1 = Lidar()
 sensor2 = Lidar(SMBus(4))
 
-threshold = 180.00
+threshold = 170.00
 currentState = IDLE_STATE
 
 while (True):
     sensor1_distance = sensor1.read_distance(True)/100
     sensor2_distance = sensor2.read_distance(True)/100
 
+    print(f'SENSOR 1 z: {sensor1_distance}')
+    print(f'SENSOR 2 z: {sensor2_distance}')
+
     if currentState == IDLE_STATE:
         if sensor1_distance < threshold:
             print('ENTRY DETECTED')
-            print(f'SENSOR 1: {sensor1_distance}')
-            print(f'SENSOR 2: {sensor2_distance}\n')
+            #print(f'SENSOR 1: {sensor1_distance}')
+            #print(f'SENSOR 2: {sensor2_distance}\n')
             currentState = ENTRY_STATE
             start = time.time()
         elif sensor2_distance < threshold:
@@ -217,24 +220,34 @@ while (True):
             currentState = EXIT_STATE
             start = time.time()
     elif currentState == ENTRY_STATE:
-        if time.time() - start > 1.0:
+        if time.time() - start > 0.5:
             print('TIMEOUT')
             currentState = IDLE_STATE
         if sensor2_distance < threshold:
             #Add one to sum
             print('+1\n')
+            print(f'SENSOR 1 y: {sensor1_distance}')
+            print(f'SENSOR 2 y: {sensor2_distance}')
             #currentState = IDLE_STATE
-            time.sleep(.5)
+            sensor1.power_on(False)
+            sensor2.power_on(False)
+            time.sleep(3.0)
+            print('\n\n\n\n\n\n\n')
             start = time.time()
     elif currentState == EXIT_STATE:
-        if time.time() - start > 1.0:
+        if time.time() - start > 0.5:
             print('TIMEOUT')
             currentState = IDLE_STATE
         if sensor1_distance < threshold:
             #Minus one from sum
             print('-1\n')
+            print(f'SENSOR 1 x: {sensor1_distance}')
+            print(f'SENSOR 2 x: {sensor2_distance}')
             #currentState = IDLE_STATE
-            time.sleep(.5)
+            time.sleep(3.0)
+            sensor1.power_on(False)
+            sensor2.power_on(False)
+            print('\n\n\n\n\n\n\n')
             start = time.time()
     #elif currentState == ENTRY_STATE or currentState == EXIT_STATE:
     #    if sensor1_distance > threshold and sensor2_distance > threshold: 
@@ -242,8 +255,9 @@ while (True):
     #        print(f'SENSOR 1: {sensor1_distance}')
     #        print(f'SENSOR 2: {sensor2_distance}\n')
     #        currentState = IDLE_STATE
-
-    time.sleep(0.025)
+    #print(f'SENSOR 1: {sensor1_distance}')
+    #print(f'SENSOR 2: {sensor2_distance}')
+    time.sleep(0.05)
         
 
     # if sensor1_distance > threshold and sensor2_distance > threshold:
