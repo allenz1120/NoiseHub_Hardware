@@ -188,9 +188,11 @@ class Lidar:
             self.bus.write_byte_data(DEFAULT_ADDRESS, POWER_CONTROL, 0x81)
 
 
-def getDistance():
-    return({"distance":sensor1.read_distance(True)/100})
-
+def getDistance(num):
+    if (num == 1):
+        return(sensor1.read_distance(True)/100)
+    if (num == 2):
+        return(sensor2.read_distance(True)/100)
 sensor1 = Lidar()
 sensor2 = Lidar(SMBus(4))
 currentState = IDLE_STATE
@@ -201,10 +203,12 @@ roomCount = 0
 while (time.time() - start < 20):
     #print({"distance":sensor1.read_distance(True)/100})
     #print({"distance":sensor2.read_distance(True)/100})
-    sensor1_distance = sensor1.read_distance(True)/100
-    sensor2_distance = sensor2.read_distance(True)/100
-    sensor1_distance = sensor1.read_distance(True)/100
-    sensor2_distance = sensor2.read_distance(True)/100
+    #sensor1_distance = sensor1.read_distance(True)/100
+    #sensor2_distance = sensor2.read_distance(True)/100
+    sensor1_distance = getDistance(1)
+    sensor2_distance = getDistance(2)
+    sensor1_distance = getDistance(1)
+    sensor2_distance = getDistance(2)
     #print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
     if currentState == IDLE_STATE:
         if (sensor1_distance < 180):
