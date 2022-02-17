@@ -9,14 +9,14 @@ LOW_VOLUME_STATE = 0
 MEDIUM_VOLUME_STATE = 1
 HIGH_VOLUME_STATE = 2
 
-POLLING_INTERVAL = 0.5
-SAMPLE_PERIOD = 120 / 4
+POLLING_INTERVAL = 0.5          # Seconds per sample
+SAMPLE_PERIOD = 120 / 4         # Seconds per period (/4 for debug purposes - reduce waiting time)
 SAMPLES_PER_PERIOD = SAMPLE_PERIOD / POLLING_INTERVAL
-COUNTER_THRESHOLD = 0.75
 
-THRESHOLD_1 = 0.08
-THRESHOLD_2 = 0.3
-THRESHOLD_3 = 0.6
+LOW_MEDIUM_COUNT_PERCENTAGE = 0.25      # Medium state lies between 25% and 75% of threshold trips
+MEDIUM_HIGH_COUNT_PERCENTAGE = 0.75     # High state lies above 75% threshold trips
+
+RMS_THRESHOLD = 0.06
 
 # Microphone config
 maxValue = 2**16
@@ -24,48 +24,59 @@ bars = 35
 p=pyaudio.PyAudio()
 stream=p.open(format=pyaudio.paInt16,channels=1,rate=44100,
               input=True, frames_per_buffer=512)
-lString = 0
 
+# Initialize variables
 counter = 0
-
 state = LOW_VOLUME_STATE
-
-thresholds = [THRESHOLD_1, THRESHOLD_2]
-
 num_samples = 0
 
 # Loop audio stream continuously
 while True:
-    num_samples += 1
-    num_samples_remaining = SAMPLES_PER_PERIOD - num_samples
+    num_samples += 1                                            # Current period sample count
+    num_samples_remaining = SAMPLES_PER_PERIOD - num_samples    # Number of samples remaining in sample period
 
+    # RMS calculation
     data = np.fromstring(stream.read(512, exception_on_overflow=False),dtype=np.int16)
     dataL = data*32
 
     # Calculate current volume level
     volume = np.max(dataL)/maxValue*2
-    print(f'volume: {volume}')
+    print(f'volume:  {volume:.4f} | state:   {state}')
 
-    if volume > thresholds[state]:
+    # Reset Conditions
+    if num_samples_remaining + counter < SAMPLES_PER_PERIOD * MEDIUM_HIGH_COUNT_PERCENTAGE or (counter > 1 and int(time.time()) - start_time > SAMPLE_PERIOD):
+        counter = 0
+        num_samples = 0
+        print('\n--------COUNTER RESET--------\n')
+        
+    # Counter Increase Condition
+    if volume > RMS_THRESHOLD:
         if counter == 0:
+            print('\n--------COUNTER START--------\n')
             start_time = int(time.time())
         counter += 1
 
-    if num_samples_remaining + counter < COUNTER_THRESHOLD or counter > 1 and int(time.time()) - start_time > SAMPLE_PERIOD:
+    print(f'counter: {counter}      | samples: {num_samples}/{int(SAMPLES_PER_PERIOD)}\n')
+
+    # Increase State: Low to Medium
+    # If 25% < counter < 75% threshold trips
+    # aka
+    # If the counter exceeds the LOW_MEDIUM threshold, but does not exceed the MEDIUM_HIGH threshold
+    if state == LOW_VOLUME_STATE and counter > SAMPLES_PER_PERIOD * LOW_MEDIUM_COUNT_PERCENTAGE and counter < SAMPLES_PER_PERIOD * MEDIUM_HIGH_COUNT_PERCENTAGE:
+        state = MEDIUM_VOLUME_STATE
+        print('\n--------STATE CHANGE: MEDIUM--------\n')
         counter = 0
 
-    print(f'counter: {counter}')
-
-    if counter > SAMPLES_PER_PERIOD * COUNTER_THRESHOLD:
-        if state == LOW_VOLUME_STATE:
-            state = MEDIUM_VOLUME_STATE
-            print('\nSTATE CHANGE: MEDIUM\n')
-        if state == MEDIUM_VOLUME_STATE:
-            state = HIGH_VOLUME_STATE
-            print('\nSTATE CHANGE: HIGH\n')
+    # Increase State: Medium to High
+    # If counter > 75% threshold trips
+    # aka
+    # If the counter exceeds the MEDIUM_HIGH threshold
+    if state == MEDIUM_VOLUME_STATE and counter > SAMPLES_PER_PERIOD * MEDIUM_HIGH_COUNT_PERCENTAGE:
+        state = HIGH_VOLUME_STATE
+        print('\n--------STATE CHANGE: HIGH--------\n')
         counter = 0
 
     # Visualize current volume level on 0-1 scale
-    lString = "#"*int(volume*bars)+"-"*int(bars-volume*bars)
+    # lString = "#"*int(volume*bars)+"-"*int(bars-volume*bars)
     # print(f'[{lString}]')
     time.sleep(POLLING_INTERVAL)
