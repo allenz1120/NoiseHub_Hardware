@@ -16,7 +16,7 @@ SAMPLES_PER_PERIOD = SAMPLE_PERIOD / POLLING_INTERVAL
 LOW_MEDIUM_COUNT_PERCENTAGE = 0.25      # Medium state lies between 25% and 75% of threshold trips
 MEDIUM_HIGH_COUNT_PERCENTAGE = 0.75     # High state lies above 75% threshold trips
 
-RMS_THRESHOLD = 0.06
+RMS_THRESHOLD = 0.09
 
 # Microphone config
 maxValue = 2**16
@@ -27,7 +27,7 @@ stream=p.open(format=pyaudio.paInt16,channels=1,rate=44100,
 
 # Initialize variables
 counter = 0
-state = HIGH_VOLUME_STATE
+state = LOW_VOLUME_STATE
 num_samples = 0
 
 # Loop audio stream continuously
@@ -41,11 +41,11 @@ while True:
 
     # Calculate current volume level
     volume = np.max(dataL)/maxValue*2
-    # print(f'volume:  {volume:.4f} | state:   {state}')
+    print(f'volume:  {volume:.4f} | state:   {state}')
 
     # # Reset Conditions
     # num_samples_remaining + counter < SAMPLES_PER_PERIOD * MEDIUM_HIGH_COUNT_PERCENTAGE or 
-    if (counter > 1 and int(time.time()) - start_time > SAMPLE_PERIOD):
+    if (counter > 1 and int(time.time()) - start_time > SAMPLE_PERIOD) or (counter == SAMPLES_PER_PERIOD):
         counter = 0
         num_samples = 0
         print('\n--------COUNTER RESET--------\n')
