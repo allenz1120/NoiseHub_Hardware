@@ -44,10 +44,11 @@ while True:
     # print(f'volume:  {volume:.4f} | state:   {state}')
 
     # # Reset Conditions
-    # if num_samples_remaining + counter < SAMPLES_PER_PERIOD * MEDIUM_HIGH_COUNT_PERCENTAGE or (counter > 1 and int(time.time()) - start_time > SAMPLE_PERIOD):
-    #     counter = 0
-    #     num_samples = 0
-    #     print('\n--------COUNTER RESET--------\n')
+    # num_samples_remaining + counter < SAMPLES_PER_PERIOD * MEDIUM_HIGH_COUNT_PERCENTAGE or 
+    if (counter > 1 and int(time.time()) - start_time > SAMPLE_PERIOD):
+        counter = 0
+        num_samples = 0
+        print('\n--------COUNTER RESET--------\n')
         
     # Counter Increase Condition
     if volume > RMS_THRESHOLD:
