@@ -188,33 +188,54 @@ class Lidar:
             self.bus.write_byte_data(DEFAULT_ADDRESS, POWER_CONTROL, 0x81)
 
 
-def getDistance():
-    return({"distance":sensor1.read_distance(True)/100})
+def getDistance(num):
+    if (num == 1):
+        return(sensor1.read_distance(True)/100)
+    if (num == 2):
+        return(sensor2.read_distance(True)/100)
+
 
 sensor1 = Lidar()
 sensor2 = Lidar(SMBus(4))
+# Lidar system starts in idle state which is no movement in front of the sensors
 currentState = IDLE_STATE
-
-while (True):
-    print({"distance":sensor1.read_distance(True)/100})
-    print({"distance":sensor2.read_distance(True)/100})
-    sensor1_distance = sensor1.read_distance(True)/100
-    sensor2_distance = sensor2.read_distance(True)/100
-
+start = time.time()
+exits = 0
+entrances = 0
+roomCount = 0
+while (time.time() - start < 20):
+    # Read and populate sensor distances twice. More accurate than sampling just once
+    sensor1_distance = getDistance(1)
+    sensor2_distance = getDistance(2)
+    sensor1_distance = getDistance(1)
+    sensor2_distance = getDistance(2)
+    #print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
+    # If the system is in idle state, no one was previously walking through the tripwire
     if currentState == IDLE_STATE:
+        # If the first sensor (closer to outside) dips below the threshold, the system is set to entry state
         if (sensor1_distance < 180):
-            print("ENTRANCE STARTED")
             currentState = ENTRY_STATE
+        # If the second sensor (closer to inside) dips below the threshold, the system is set to exit state
         if (sensor2_distance < 180):
-            print("EXIT STARTED")
             currentState = EXIT_STATE
+    # If the system is in entry state, it means someone previously tripped the outside sensor and is entering the room
     elif currentState == ENTRY_STATE:
         print("+1")
+        entrances += 1
+        # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
         currentState = IDLE_STATE
-        time.sleep(0.6)
+        time.sleep(0.75)
+    # If the system is in exit state, it means someone previously tripped the outside sensor and is entering the room
     elif currentState == EXIT_STATE:
+        exits += 1
         print("-1")
+        # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
         currentState = IDLE_STATE
-        time.sleep(0.6)
-
+        time.sleep(0.75)
+    # Each sample of the lidar sensors has a sleep to maintain a 0.05s sample rate
     time.sleep(0.05)
+
+roomCount = roomCount + entrances - exits
+print("number of entrances:", entrances)
+print("number of exits:", exits)
+print("current headcount:", roomCount)
