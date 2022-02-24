@@ -9,7 +9,7 @@ import threading
 import time
 from uuid import uuid4
 import json
-sys.path.insert(1, '/home/pi/noiseHub')
+sys.path.insert(1, '/home/pi/NoiseHub_Hardware/noiseHub')
 from thermistor import makePayload
 from lidar import getDistance
 # This sample uses the Message Broker for AWS IoT to send and receive messages

@@ -189,4 +189,4 @@ class Lidar:
 def getDistance():
     sensor1 = Lidar()
     sensor2 = Lidar(SMBus(4))
-    return({"distance 1":sensor1.read_distance(True)/100 "\ndistance 2":sensor2.read_distance(True)/100})
+    return({"distance 1":sensor1.read_distance(True)/100})
