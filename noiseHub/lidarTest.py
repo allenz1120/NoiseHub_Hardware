@@ -226,7 +226,7 @@ def getHeadcount():
         time.sleep(0.01)
         sensor1_distance = getDistance(1)
         sensor2_distance = getDistance(2)
-        #print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
+        print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
         # If the system is in idle state, no one was previously walking through the tripwire
         if currentState == IDLE_STATE:
             # If the first sensor (closer to outside) dips below the threshold, the system is set to entry state
