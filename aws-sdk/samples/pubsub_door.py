@@ -361,71 +361,77 @@ if __name__ == '__main__':
     AWS_timer = int(time.time())
 
     while(True):
-        sensor1 = Lidar()
-        sensor2 = Lidar(SMBus(4))
+        try:
+            sensor1 = Lidar()
+            sensor2 = Lidar(SMBus(4))
 
-        # Read and populate sensor distances twice. More accurate than sampling just once
-        sensor1_distance = getDistance(1)
-        sensor2_distance = getDistance(2)
-        time.sleep(0.01)
-        sensor1_distance = getDistance(1)
-        sensor2_distance = getDistance(2)
-        # print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
-        # If the system is in idle state, no one was previously walking through the tripwire
-        
-        if currentState == IDLE_STATE:
-            # If the first sensor (closer to outside) dips below the threshold, the system is set to entry state
-            if (sensor1_distance < 180 and sensor1_distance < sensor2_distance):
-                currentState = ENTRY_STATE
-            # If the second sensor (closer to inside) dips below the threshold, the system is set to exit state
-            if (sensor2_distance < 180 and sensor2_distance < sensor1_distance):
-                currentState = EXIT_STATE
-        # If the system is in entry state, it means someone previously tripped the outside sensor and is entering the room
-        elif currentState == ENTRY_STATE:
-            print("Enter")
-            roomCount += 1
-            # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
-            currentState = IDLE_STATE
-            time.sleep(0.80)
-        # If the system is in exit state, it means someone previously tripped the outside sensor and is entering the room
-        elif currentState == EXIT_STATE:
-            roomCount -= 1
-            print("Exit")
-            # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
-            currentState = IDLE_STATE
-            time.sleep(0.80)
-        # Each sample of the lidar sensors has a sleep to maintain a 0.05s sample rate
-        time.sleep(0.02)
+            # Read and populate sensor distances twice. More accurate than sampling just once
+            sensor1_distance = getDistance(1)
+            sensor2_distance = getDistance(2)
+            time.sleep(0.01)
+            sensor1_distance = getDistance(1)
+            sensor2_distance = getDistance(2)
+            # print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
+            # If the system is in idle state, no one was previously walking through the tripwire
+            
+            if currentState == IDLE_STATE:
+                # If the first sensor (closer to outside) dips below the threshold, the system is set to entry state
+                if (sensor1_distance < 180 and sensor1_distance < sensor2_distance):
+                    currentState = ENTRY_STATE
+                # If the second sensor (closer to inside) dips below the threshold, the system is set to exit state
+                if (sensor2_distance < 180 and sensor2_distance < sensor1_distance):
+                    currentState = EXIT_STATE
+            # If the system is in entry state, it means someone previously tripped the outside sensor and is entering the room
+            elif currentState == ENTRY_STATE:
+                print("Enter")
+                roomCount += 1
+                # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
+                currentState = IDLE_STATE
+                time.sleep(0.80)
+            # If the system is in exit state, it means someone previously tripped the outside sensor and is entering the room
+            elif currentState == EXIT_STATE:
+                roomCount -= 1
+                print("Exit")
+                # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
+                currentState = IDLE_STATE
+                time.sleep(0.80)
+            # Each sample of the lidar sensors has a sleep to maintain a 0.05s sample rate
+            time.sleep(0.02)
 
-        if int(time.time()) - AWS_timer > 5:
-            # Publish message to server desired number of times.
-            # This step is skipped if message is blank.
-            # This step loops forever if count was set to 0.
-            if args.message:
-                publish_count = 1
-                # message = "{} [{}]".format(args.message, publish_count)
-                message = {'headcount': roomCount,
-                            'temperature': 68.56
-                            }
-                print("Publishing message to topic '{}': {}".format(args.topic, message))
-                message_json = json.dumps(message)
-                print(message_json)
-                mqtt_connection.publish(
-                    topic=args.topic,
-                    payload=message_json,
-                    qos=mqtt.QoS.AT_LEAST_ONCE)
-                time.sleep(1)
-                publish_count += 1
+            if int(time.time()) - AWS_timer > 180:
+                # Publish message to server desired number of times.
+                # This step is skipped if message is blank.
+                # This step loops forever if count was set to 0.
+                if args.message:
+                    publish_count = 1
+                    # message = "{} [{}]".format(args.message, publish_count)
+                    message = {'headcount': roomCount,
+                                'temperature': 68.56
+                                }
+                    print("Publishing message to topic '{}': {}".format(args.topic, message))
+                    message_json = json.dumps(message)
+                    print(message_json)
+                    mqtt_connection.publish(
+                        topic=args.topic,
+                        payload=message_json,
+                        qos=mqtt.QoS.AT_LEAST_ONCE)
+                    time.sleep(1)
+                    publish_count += 1
 
-            # Wait for all messages to be received.
-            # This waits forever if count was set to 0.
-            if args.count != 0 and not received_all_event.is_set():
-                print("Waiting for all messages to be received...")
+                # Wait for all messages to be received.
+                # This waits forever if count was set to 0.
+                if args.count != 0 and not received_all_event.is_set():
+                    print("Waiting for all messages to be received...")
 
-            received_all_event.wait()
-            print("{} message(s) received.".format(received_count))
+                received_all_event.wait()
+                print("{} message(s) received.".format(received_count))
 
-            AWS_timer = int(time.time())
+                AWS_timer = int(time.time())
+        except KeyboardInterrupt:
+            print('\n\nI\'m gonna end it all')
+            sys.exit()
+        except:
+            print('Lidar or thermistor sensor error')
 
     # Disconnect
     print("Disconnecting...")
