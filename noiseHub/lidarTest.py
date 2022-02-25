@@ -1,16 +1,17 @@
 from smbus2 import *
 import time
-DEFAULT_ADDRESS = 0x62 # Address of the device
-#Internal registers
-ACQ_COMMAND = 0x00 # W: 0x00 Reset all registers to default
-                   # W: 0x03 Measure distance (no correction)
-                   # W: 0x04 Measure distance (Bias correction)
-ACQ_CONFIG_REG = 0x04 # R/W: Configuration of the device
-STATUS = 0x01 # R: Status register of the device
-DISTANCE_OUTPUT = 0x8f # R: Distance measurement in cm (2 Bytes)
-VELOCITY_OUTPUT = 0x09 # R: Velocity measurement in cm/s (1 Byte, 2's complement)
-POWER_CONTROL = 0x65 # R/W: Configure power mode of the device
-SIG_COUNT_VAL = 0x02 # R/W: Max times a pulse can be sent
+DEFAULT_ADDRESS = 0x62  # Address of the device
+# Internal registers
+ACQ_COMMAND = 0x00  # W: 0x00 Reset all registers to default
+# W: 0x03 Measure distance (no correction)
+# W: 0x04 Measure distance (Bias correction)
+ACQ_CONFIG_REG = 0x04  # R/W: Configuration of the device
+STATUS = 0x01  # R: Status register of the device
+DISTANCE_OUTPUT = 0x8f  # R: Distance measurement in cm (2 Bytes)
+# R: Velocity measurement in cm/s (1 Byte, 2's complement)
+VELOCITY_OUTPUT = 0x09
+POWER_CONTROL = 0x65  # R/W: Configure power mode of the device
+SIG_COUNT_VAL = 0x02  # R/W: Max times a pulse can be sent
 IDLE_STATE = 0
 ENTRY_STATE = 1
 EXIT_STATE = 2
@@ -18,16 +19,19 @@ EXIT_STATE = 2
 """
 Interface for the Garmin Lidar-Lite v3
 """
+
+
 class Lidar:
     """
     @:param SMBus, a bus for the device to use
     """
-    def __init__(self, bus = None):
+
+    def __init__(self, bus=None):
         if bus is None:
             self.bus = SMBus(1)
         else:
             self.bus = bus
-        self.is_on = False # Represents the on/off state of the receiver circuit
+        self.is_on = False  # Represents the on/off state of the receiver circuit
 
     """
     Take one measurement in cm, if the receiver circuit is disabled, it will enable the circuit before
@@ -36,24 +40,25 @@ class Lidar:
     @:param: bias_correction boolean, determines if measurement uses bias correction or not
     @:return int distance in cm
     """
+
     def read_distance(self, bias_correction=True):
         if not self.is_on:
             self.power_on()
         if bias_correction:
             # Write 0x04 to 0x00 for bias corrected measurement
-            self.bus.write_byte_data(DEFAULT_ADDRESS, ACQ_COMMAND,0x04)
+            self.bus.write_byte_data(DEFAULT_ADDRESS, ACQ_COMMAND, 0x04)
         else:
             # Write 0x03 to 0x00 for no bias correction
             self.bus.write_byte_data(DEFAULT_ADDRESS, ACQ_COMMAND, 0x03)
         # Wait for device to receive distance reading
         self._wait_for_ready_()
-        #time.sleep(1)
+        # time.sleep(1)
         # Read HIGH and LOW distance registers
         #distance = self.bus.read_i2c_block_data(DEFAULT_ADDRESS, DISTANCE_OUTPUT, 2)
         low = self.bus.read_byte_data(DEFAULT_ADDRESS, 0x10)
         high = self.bus.read_byte_data(DEFAULT_ADDRESS, 0x11)
         #print("HELLO", low, high)
-        #return distance[0] << 8 | distance[1] # combine both bytes
+        # return distance[0] << 8 | distance[1] # combine both bytes
         return low << 8 | high
 
     """
@@ -63,6 +68,7 @@ class Lidar:
         positive = away from lidar
         negative = towards lidar
     """
+
     def read_velocity(self):
         if not self.is_on:
             self.power_on()
@@ -94,6 +100,7 @@ class Lidar:
                   11 = Oscillator output mode (nominal 31.25kHz output)
         default config = 0x08 (0001000)
     """
+
     def read_device_config(self):
         config = int(self.bus.read_byte_data(DEFAULT_ADDRESS, ACQ_CONFIG_REG))
         config = bin(config)[2:].zfill(7)
@@ -118,9 +125,10 @@ class Lidar:
                   11 = Oscillator output mode (nominal 31.25kHz output)
         default config = 0x08 (0001000)
     """
+
     def write_device_config(self, bits):
         bits = [str(bit) for bit in bits]
-        bits = int("".join(bits),2) # Convert to dec for i2c reg
+        bits = int("".join(bits), 2)  # Convert to dec for i2c reg
         self.bus.write_byte_data(DEFAULT_ADDRESS, ACQ_CONFIG_REG, bits)
 
     """
@@ -134,6 +142,7 @@ class Lidar:
         bit 1: Reference overflow flag
         bit 0: Busy flag
     """
+
     def read_device_status(self):
         # Read the STATUS register, bits 0-6 only
         status = int(self.bus.read_byte_data(DEFAULT_ADDRESS, 0x01))
@@ -146,6 +155,7 @@ class Lidar:
     Check if the device is busy
     @:return boolean, true = busy
     """
+
     def device_busy(self):
         # STATUS register bit 0 represents busy flag, 0 for ready, 1 for busy
         return self.read_device_config()[-1]
@@ -153,9 +163,10 @@ class Lidar:
     """
     Wait for the device to be ready
     """
+
     def _wait_for_ready_(self):
         while self.device_busy():
-            #print(self.device_busy())
+            # print(self.device_busy())
             pass
 
     """
@@ -165,11 +176,12 @@ class Lidar:
     The lower the number, the faster the measurement, values can range from 30 to 255
     @:param count max number of pulses (default 128)
     """
+
     def maximum_acquisition_count(self, count):
         if 30 < count < 255:
             raise Exception("Value must be between 30 and 255")
         self.bus.write_byte_data(DEFAULT_ADDRESS, SIG_COUNT_VAL, count)
-        print(self.bus.read_byte_data(DEFAULT_ADDRESS,SIG_COUNT_VAL))
+        print(self.bus.read_byte_data(DEFAULT_ADDRESS, SIG_COUNT_VAL))
 
     """
     Turn the device receiver circuit on or off, This will save roughly 40mA
@@ -177,6 +189,7 @@ class Lidar:
     receiving a measurement
     @:param on boolean, represents the action
     """
+
     def power_on(self, on=True):
         if on:
             # Enable the receiver circuit
@@ -187,55 +200,58 @@ class Lidar:
             self.is_on = False
             self.bus.write_byte_data(DEFAULT_ADDRESS, POWER_CONTROL, 0x81)
 
-
+sensor1 = Lidar()
+sensor2 = Lidar(SMBus(4))
 def getDistance(num):
     if (num == 1):
         return(sensor1.read_distance(True)/100)
     if (num == 2):
         return(sensor2.read_distance(True)/100)
 
-
-sensor1 = Lidar()
-sensor2 = Lidar(SMBus(4))
-# Lidar system starts in idle state which is no movement in front of the sensors
-currentState = IDLE_STATE
-start = time.time()
-exits = 0
-entrances = 0
 roomCount = 0
-while (time.time() - start < 20):
-    # Read and populate sensor distances twice. More accurate than sampling just once
-    sensor1_distance = getDistance(1)
-    sensor2_distance = getDistance(2)
-    sensor1_distance = getDistance(1)
-    sensor2_distance = getDistance(2)
-    #print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
-    # If the system is in idle state, no one was previously walking through the tripwire
-    if currentState == IDLE_STATE:
-        # If the first sensor (closer to outside) dips below the threshold, the system is set to entry state
-        if (sensor1_distance < 180):
-            currentState = ENTRY_STATE
-        # If the second sensor (closer to inside) dips below the threshold, the system is set to exit state
-        if (sensor2_distance < 180):
-            currentState = EXIT_STATE
-    # If the system is in entry state, it means someone previously tripped the outside sensor and is entering the room
-    elif currentState == ENTRY_STATE:
-        print("+1")
-        entrances += 1
-        # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
-        currentState = IDLE_STATE
-        time.sleep(0.75)
-    # If the system is in exit state, it means someone previously tripped the outside sensor and is entering the room
-    elif currentState == EXIT_STATE:
-        exits += 1
-        print("-1")
-        # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
-        currentState = IDLE_STATE
-        time.sleep(0.75)
-    # Each sample of the lidar sensors has a sleep to maintain a 0.05s sample rate
-    time.sleep(0.05)
+def getHeadcount():
+    # Lidar system starts in idle state which is no movement in front of the sensors
+    roomCount = 0
+    currentState = IDLE_STATE
+    start = time.time()
+    exits = 0
+    entrances = 0
+    while(True):
+    #while (time.time() - start < 20):
+        # Read and populate sensor distances twice. More accurate than sampling just once
+        sensor1_distance = getDistance(1)
+        sensor2_distance = getDistance(2)
+        time.sleep(0.01)
+        sensor1_distance = getDistance(1)
+        sensor2_distance = getDistance(2)
+        print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
+        # If the system is in idle state, no one was previously walking through the tripwire
+        if currentState == IDLE_STATE:
+            # If the first sensor (closer to outside) dips below the threshold, the system is set to entry state
+            if (sensor1_distance < 180 and sensor1_distance < sensor2_distance):
+                currentState = ENTRY_STATE
+            # If the second sensor (closer to inside) dips below the threshold, the system is set to exit state
+            if (sensor2_distance < 180 and sensor2_distance < sensor1_distance):
+                currentState = EXIT_STATE
+        # If the system is in entry state, it means someone previously tripped the outside sensor and is entering the room
+        elif currentState == ENTRY_STATE:
+            print("Enter")
+            roomCount += 1
+            # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
+            currentState = IDLE_STATE
+            time.sleep(0.80)
+        # If the system is in exit state, it means someone previously tripped the outside sensor and is entering the room
+        elif currentState == EXIT_STATE:
+            roomCount -= 1
+            print("Exit")
+            # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
+            currentState = IDLE_STATE
+            time.sleep(0.80)
+        # Each sample of the lidar sensors has a sleep to maintain a 0.05s sample rate
+        time.sleep(0.02)
 
-roomCount = roomCount + entrances - exits
-print("number of entrances:", entrances)
-print("number of exits:", exits)
-print("current headcount:", roomCount)
+    # roomCount = roomCount + entrances - exits
+    # print("number of entrances:", entrances)
+    # print("number of exits:", exits)
+    # print("current headcount:", roomCount)
+getHeadcount()

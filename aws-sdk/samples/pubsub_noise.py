@@ -149,7 +149,7 @@ if __name__ == '__main__':
     subscribe_result = subscribe_future.result()
     print("Subscribed with {}".format(str(subscribe_result['qos'])))
 
-    # ENUMS
+    # Noise script ENUMS
     LOW_VOLUME_STATE = 0
     MEDIUM_VOLUME_STATE = 1
     HIGH_VOLUME_STATE = 2
@@ -241,17 +241,10 @@ if __name__ == '__main__':
         # print(f'[{lString}]')
 
         if int(time.time()) - AWS_timer > 5:
-            AWS_timer = int(time.time())
-
             # Publish message to server desired number of times.
             # This step is skipped if message is blank.
             # This step loops forever if count was set to 0.
             if args.message:
-                # if args.count == 0:
-                #     print ("Sending messages until program killed")
-                # else:
-                #     print ("Sending {} message(s)".format(args.count))
-
                 publish_count = 1
 
                 # message = "{} [{}]".format(args.message, publish_count)
@@ -280,6 +273,7 @@ if __name__ == '__main__':
             received_all_event.wait()
             print("{} message(s) received.".format(received_count))
 
+            AWS_timer = int(time.time())
 
         time.sleep(POLLING_INTERVAL)
 

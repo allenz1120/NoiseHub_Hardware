@@ -32,3 +32,4 @@ def makePayload():
 	temp = "{:.2f}".format(temp[1])
 	payload = {"device_id": "raspberry-pi-1", "location":"Senior Design", "temperature": temp}
 	return payload
+read_temp()
