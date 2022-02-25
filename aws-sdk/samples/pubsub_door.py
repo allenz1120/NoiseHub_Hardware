@@ -360,16 +360,10 @@ if __name__ == '__main__':
     currentState = IDLE_STATE
     AWS_timer = int(time.time())
 
-    # Flag to only initialize Lidar sensors if an error occurs or on first run
-    errorFlag = True
-
+    sensor1 = Lidar()
+    sensor2 = Lidar(SMBus(4))
     while(True):
         try:
-            if errorFlag:
-                sensor1 = Lidar()
-                sensor2 = Lidar(SMBus(4))
-                errorFlag = False
-
             # Read and populate sensor distances twice. More accurate than sampling just once
             sensor1_distance = getDistance(1)
             sensor2_distance = getDistance(2)
@@ -437,7 +431,6 @@ if __name__ == '__main__':
             sys.exit()
         except Exception as e:
             # print('Lidar or thermistor sensor error')
-            errorFlag = False
             print(e)
 
     # Disconnect
