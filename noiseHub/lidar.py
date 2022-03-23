@@ -14,7 +14,7 @@ SIG_COUNT_VAL = 0x02 # R/W: Max times a pulse can be sent
 
 
 """
-Interface for the Garmin Lidar-Lite v3
+Interface for the Garmin Lidar-Lite v4
 """
 class Lidar:
     """
