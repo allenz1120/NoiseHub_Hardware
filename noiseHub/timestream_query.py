@@ -1,7 +1,11 @@
 import boto3
+import sys
 
-ACCESS_KEY='AKIATBZ4AXFK2AXA7QHV'
-SECRET_KEY='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'
+sys.path.insert(1, '/home/pi/NoiseHub_Hardware/certs')
+import keys
+
+keys.ACCESS_KEY='AKIATBZ4AXFK2AXA7QHV'
+keys.SECRET_KEY='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'
 DATABASE_NAME='noisehub-timestream'
 TABLE_NAME='noise_data'
 REGION='us-east-2'
