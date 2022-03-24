@@ -226,7 +226,7 @@ def getHeadcount():
         time.sleep(0.01)
         sensor1_distance = getDistance(1)
         sensor2_distance = getDistance(2)
-        print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
+        # print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
         # If the system is in idle state, no one was previously walking through the tripwire
         if currentState == IDLE_STATE:
             # If the first sensor (closer to outside) dips below the threshold, the system is set to entry state
@@ -238,6 +238,7 @@ def getHeadcount():
         # If the system is in entry state, it means someone previously tripped the outside sensor and is entering the room
         elif currentState == ENTRY_STATE:
             print("Enter")
+            print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
             roomCount += 1
             # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
             currentState = IDLE_STATE
@@ -246,6 +247,7 @@ def getHeadcount():
         elif currentState == EXIT_STATE:
             roomCount -= 1
             print("Exit")
+            print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
             # The next state will be idle and we sleep for 0.75 seconds to account for most human walking speed through the door
             currentState = IDLE_STATE
             time.sleep(0.80)

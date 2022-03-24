@@ -10,7 +10,7 @@ import time
 from uuid import uuid4
 import json
 sys.path.insert(1, '/home/pi/NoiseHub_Hardware/noiseHub')
-# from thermistor import read_temp
+from thermistor import read_temp
 
 # This sample uses the Message Broker for AWS IoT to send and receive messages
 # through an MQTT connection. On startup, the device connects to the server,
@@ -375,11 +375,13 @@ if __name__ == '__main__':
             
             if currentState == IDLE_STATE:
                 # If the first sensor (closer to outside) dips below the threshold, the system is set to entry state
-                if (sensor1_distance < 180 and sensor1_distance < sensor2_distance):
+                if (sensor1_distance < 110 and sensor1_distance < sensor2_distance):
                     currentState = ENTRY_STATE
+                    print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
                 # If the second sensor (closer to inside) dips below the threshold, the system is set to exit state
-                if (sensor2_distance < 180 and sensor2_distance < sensor1_distance):
+                if (sensor2_distance < 110 and sensor2_distance < sensor1_distance):
                     currentState = EXIT_STATE
+                    print(str(sensor1_distance) + "      |      " + str(sensor2_distance))
             # If the system is in entry state, it means someone previously tripped the outside sensor and is entering the room
             elif currentState == ENTRY_STATE:
                 print("Enter")
@@ -404,8 +406,9 @@ if __name__ == '__main__':
                 if args.message:
                     publish_count = 1
                     # message = "{} [{}]".format(args.message, publish_count)
+                    temp = read_temp()
                     message = {'headcount': roomCount,
-                                'temperature': 68.56
+                                'temperature': temp
                                 }
                     print("Publishing message to topic '{}': {}".format(args.topic, message))
                     message_json = json.dumps(message)
