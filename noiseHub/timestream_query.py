@@ -4,16 +4,14 @@ import sys
 sys.path.insert(1, '/home/pi/NoiseHub_Hardware/certs')
 import keys
 
-keys.ACCESS_KEY='AKIATBZ4AXFK2AXA7QHV'
-keys.SECRET_KEY='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'
 DATABASE_NAME='noisehub-timestream'
 TABLE_NAME='noise_data'
 REGION='us-east-2'
 
 client = boto3.client(
     service_name='timestream-query',
-    aws_access_key_id=ACCESS_KEY,
-    aws_secret_access_key=SECRET_KEY,
+    aws_access_key_id=keys.ACCESS_KEY,
+    aws_secret_access_key=keys.SECRET_KEY,
     region_name=REGION,
 )
 

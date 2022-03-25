@@ -1,13 +1,11 @@
 import boto3
 import sys
 
-sys.path.insert(1, '/home/pi/NoiseHub_Hardware/certs')
+sys.path.insert(1, '../certs')
 import keys
 
-keys.ACCESS_KEY='AKIATBZ4AXFK2GH4DGRF'
-keys.SECRET_KEY='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'
 DATABASE_NAME='noisehub-timestream'
-TABLE_NAME='noise_data'
+# TABLE_NAME='noise_data'
 REGION='us-east-2'
 
 client = boto3.client(
