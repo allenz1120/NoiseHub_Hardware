@@ -2,7 +2,7 @@ from xmlrpc.client import DateTime
 import boto3
 import sys
 from datetime import datetime
-from decimal import Decimal
+import json
 
 sys.path.insert(1, '../certs')
 import keys
@@ -174,10 +174,11 @@ for row in door_data:
     dynamo_data['head_timestamp'].append(str(datetime_object))
     dynamo_data['temp_timestamp'].append(str(datetime_object))
     
-    temp = Decimal(row['Data'][1]['ScalarValue'])
+    temp = row['Data'][1]['ScalarValue']
+    temp = round(float(temp) * 1.8 + 32, 2)
 
     # Append temp(erature) to global dictionary
-    dynamo_data['temp_data'].append(temp)
+    dynamo_data['temp_data'].append(str(temp))
 
     heads = int(row['Data'][0]['ScalarValue'])
     
@@ -209,9 +210,9 @@ dynamo_data['min_head_timestamp'] = str(min_heads_time)
 dynamo_data['min_head_value'] = min_heads
 
 dynamo_data['max_temp_timestamp'] = str(max_temp_time)
-dynamo_data['max_temp_value'] = max_temp
+dynamo_data['max_temp_value'] = str(max_temp)
 dynamo_data['min_temp_timestamp'] = str(min_temp_time)
-dynamo_data['min_temp_value'] = min_temp
+dynamo_data['min_temp_value'] = str(min_temp)
 
 # print(dynamo_data)
 
@@ -229,7 +230,7 @@ dynamodb = boto3.resource(
 
 table = dynamodb.Table(TABLE_NAME)
 
-data = dynamo_data
+data = json.dumps(dynamo_data)
 
 response = table.update_item(
     Key={
