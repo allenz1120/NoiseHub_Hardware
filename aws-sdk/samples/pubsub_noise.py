@@ -156,60 +156,59 @@ if __name__ == '__main__':
     HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
     PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
-        s.listen()
-        conn, addr = s.accept()
-        with conn:
-            print(f"Connected by {addr}")
-            # Loop audio stream continuously
-            while True:
-                try:
-                    data = conn.recv(1024)
-                    if not data:
-                        break
-                    conn.sendall(data)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((HOST, PORT))
+    s.listen()
+    conn, addr = s.accept()
+    print(f"Connected by {addr}")
+    # Loop audio stream continuously
+    while True:
+        try:
+            data = conn.recv(1024)
+            if not data:
+                break
+            conn.sendall(data)
 
-                    if int(time.time()) - AWS_timer > 180:
-                        # Publish message to server desired number of times.
-                        # This step is skipped if message is blank.
-                        # This step loops forever if count was set to 0.
-                        if args.message:
-                            publish_count = 1
+            if int(time.time()) - AWS_timer > 180:
+                # Publish message to server desired number of times.
+                # This step is skipped if message is blank.
+                # This step loops forever if count was set to 0.
+                if args.message:
+                    publish_count = 1
 
-                            # message = "{} [{}]".format(args.message, publish_count)
-                            # print(f'AUDIO_STATE: {state}')
+                    # message = "{} [{}]".format(args.message, publish_count)
+                    # print(f'AUDIO_STATE: {state}')
 
-                            message = {'noise': 'test'}
+                    message = {'noise': 'test'}
 
-                            # message = makePayload()
-                            # message2 = getDistance()
-                            # message.update(message2)
-                            print("Publishing message to topic '{}': {}".format(args.topic, message))
-                            message_json = json.dumps(message)
-                            print(message_json)
-                            mqtt_connection.publish(
-                                topic=args.topic,
-                                payload=message_json,
-                                qos=mqtt.QoS.AT_LEAST_ONCE)
-                            time.sleep(1)
-                            publish_count += 1
+                    # message = makePayload()
+                    # message2 = getDistance()
+                    # message.update(message2)
+                    print("Publishing message to topic '{}': {}".format(args.topic, message))
+                    message_json = json.dumps(message)
+                    print(message_json)
+                    mqtt_connection.publish(
+                        topic=args.topic,
+                        payload=message_json,
+                        qos=mqtt.QoS.AT_LEAST_ONCE)
+                    time.sleep(1)
+                    publish_count += 1
 
-                        # Wait for all messages to be received.
-                        # This waits forever if count was set to 0.
-                        if args.count != 0 and not received_all_event.is_set():
-                            print("Waiting for all messages to be received...")
+                # Wait for all messages to be received.
+                # This waits forever if count was set to 0.
+                if args.count != 0 and not received_all_event.is_set():
+                    print("Waiting for all messages to be received...")
 
-                        received_all_event.wait()
-                        print("{} message(s) received.".format(received_count))
+                received_all_event.wait()
+                print("{} message(s) received.".format(received_count))
 
-                        AWS_timer = int(time.time())
+                AWS_timer = int(time.time())
 
-                except KeyboardInterrupt:
-                    print('\n\nI\'m gonna end it all')
-                    sys.exit()
-                except:
-                    print('Microphone sensor error')
+        except KeyboardInterrupt:
+            print('\n\nI\'m gonna end it all')
+            sys.exit()
+        except:
+            print('Microphone sensor error')
 
     # Disconnect
     print("Disconnecting...")
