@@ -165,6 +165,8 @@ if __name__ == '__main__':
     while True:
         try:
             data = conn.recv(1024)
+            data = json.loads(data.decode('utf-8'))
+            print(data)
             if not data:
                 break
             conn.sendall(data)
@@ -179,7 +181,7 @@ if __name__ == '__main__':
                     # message = "{} [{}]".format(args.message, publish_count)
                     # print(f'AUDIO_STATE: {state}')
 
-                    message = {'noise': 'test'}
+                    message = data
 
                     # message = makePayload()
                     # message2 = getDistance()
