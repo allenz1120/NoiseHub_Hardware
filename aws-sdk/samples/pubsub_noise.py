@@ -10,7 +10,7 @@ import time
 from uuid import uuid4
 import json
 from time import sleep
-import pyaudio
+#import pyaudio
 import numpy as np
 import statistics
 import math
