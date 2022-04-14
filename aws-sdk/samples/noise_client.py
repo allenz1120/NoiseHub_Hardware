@@ -6,8 +6,16 @@ import pyaudio
 import numpy as np
 import socket
 import json
+import paho.mqtt.client as mqtt
 sys.path.insert(1, '/home/pi/NoiseHub_Hardware/noiseHub')
 # from thermistor import read_temp
+
+def on_publish(client, userdata, mid):
+    print('Data published\n')
+    client.is_published = True
+    client.loop_stop()
+    return
+
 
 if __name__ == '__main__':
     # Noise script ENUMS
@@ -103,15 +111,37 @@ if __name__ == '__main__':
                 num_samples = 0
 
 
-            if int(time.time()) - client_timer > 5:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    message = {'noise': state, 'temp': 69.68}
-                    payload = json.dumps(message).encode('utf-8')
-                    s.connect((HOST, PORT))
-                    s.sendall(payload)
-                    data = s.recv(1024)
+            if int(time.time()) - client_timer > 3:
+                broker = '192.168.1.12'  # Broker's IP address
+                port = ''  # Broker's port address (not necessary as defaults to 1883)
 
-                print(f"Received {data!r}")
+                mqtt.Client.is_published = False
+
+                client = mqtt.Client('Python-Client')  # Create a mqtt client object
+                client.on_publish = on_publish  # define an on_publish function for the client
+
+                # Connect to the broker and attempt to publish (default QoS = 0)
+
+                try:
+                    client.connect(broker)
+                    message = {"noise": state, "temp": 28.08}
+                    ret, mid = client.publish('mqttdonald', json.dumps(message))
+
+                    client.loop_start()
+
+                    if not ret == 0:
+                        print('Could not publish')
+
+                    while(client.is_published == False):
+                        pass
+
+                except Exception as e:
+                    print(e)
+                    exit(1)
+
+            client.disconnect()
+            exit(0)
+
                 client_timer = int(time.time())
 
             time.sleep(POLLING_INTERVAL) 
@@ -120,3 +150,4 @@ if __name__ == '__main__':
             sys.exit()
         except Exception as e:
             print(e)
+            

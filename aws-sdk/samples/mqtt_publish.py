@@ -32,7 +32,7 @@ def on_publish(client, userdata, mid):
     return
 
 
-for i in range(100):
+while (True):
     broker = '192.168.1.12'  # Broker's IP address
     port = ''  # Broker's port address (not necessary as defaults to 1883)
 
