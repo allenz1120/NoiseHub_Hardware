@@ -37,7 +37,7 @@ if __name__ == '__main__':
     num_samples = 0
 
     # Server for central pi
-    HOST = "127.0.0.1"  # The server's hostname or IP address
+    HOST = "192.168.1.12"  # The server's hostname or IP address
     PORT = 65432  # The port used by the server
 
     # Start timer for sending current volume state to AWS
@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
             if int(time.time()) - client_timer > 5:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    message = {'noise': state, 'temperature': read_temp()}
+                    message = {'noise': state, 'temp': 69.68}
                     payload = json.dumps(message).encode('utf-8')
                     s.connect((HOST, PORT))
                     s.sendall(payload)
@@ -114,9 +114,9 @@ if __name__ == '__main__':
                 print(f"Received {data!r}")
                 client_timer = int(time.time())
 
-            time.sleep(POLLING_INTERVAL)
+            time.sleep(POLLING_INTERVAL) 
         except KeyboardInterrupt:
             print('\n\nI\'m gonna end it all')
             sys.exit()
-        except:
-            print('Microphone sensor error')
+        except Exception as e:
+            print(e)
