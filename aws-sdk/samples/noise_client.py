@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
                 client.disconnect()
 
-            client_timer = int(time.time())
+                client_timer = int(time.time())
 
             time.sleep(POLLING_INTERVAL) 
         except KeyboardInterrupt:
