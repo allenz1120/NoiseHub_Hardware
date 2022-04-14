@@ -169,7 +169,7 @@ if __name__ == '__main__':
             print(data)
             if not data:
                 break
-            conn.sendall(data)
+            # conn.sendall(data)
 
             if int(time.time()) - AWS_timer > 180:
                 # Publish message to server desired number of times.
