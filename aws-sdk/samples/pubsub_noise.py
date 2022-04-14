@@ -159,11 +159,11 @@ if __name__ == '__main__':
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((HOST, PORT))
     s.listen()
-    conn, addr = s.accept()
-    print(f"Connected by {addr}")
     # Loop audio stream continuously
     while True:
         try:
+            conn, addr = s.accept()
+            print(f"Connected by {addr}")
             data = conn.recv(1024)
             data = json.loads(data.decode('utf-8'))
             print(data)
