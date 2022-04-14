@@ -10,11 +10,11 @@ import time
 from uuid import uuid4
 import json
 from time import sleep
-#import pyaudio
 import numpy as np
 import statistics
 import math
-import socket
+import paho.mqtt.client as pmqtt
+# import socket
 
 # This sample uses the Message Broker for AWS IoT to send and receive messages
 # through an MQTT connection. On startup, the device connects to the server,
@@ -55,6 +55,15 @@ io.init_logging(getattr(io.LogLevel, args.verbosity), 'stderr')
 received_count = 0
 received_all_event = threading.Event()
 
+# AWS payload
+payload = {'noise': 0, 'temp': 0}
+
+# Start timer for sending current volume state to AWS
+timer = int(time.time())
+
+# Keep track of number of MQTT messages received
+counter = 0
+
 # Callback when connection is accidentally lost.
 def on_connection_interrupted(connection, error, **kwargs):
     print("Connection interrupted. error: {}".format(error))
@@ -91,129 +100,136 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     received_all_event.set()
 
 
+# MQTT Functions
+def on_connect(client, userdata, flags, rc):  # The callback for when the client connects to the broker
+    print("Connected with result code {0}".format(str(rc)))  # Print result of connection attempt
+    client.subscribe("mqttdonald")  # Subscribe to the topic “digitest/test1”, receive any messages published on it
+
+
+def on_message(client, userdata, msg):  # The callback for when a PUBLISH message is received from the server.
+    # print(f'timer: {timer}')
+    global timer
+    global counter
+    counter += 1
+    print("Message received-> " + msg.topic + " " + str(msg.payload))  # Print a received msg
+    msg = json.loads(msg.payload)
+    payload['noise'] += msg['noise']
+    payload['temp'] += msg['temp']
+
+    if int(time.time()) - timer > 5:
+        payload['noise'] /= counter
+        payload['temp'] /= counter
+        # Publish message to server desired number of times.
+        # This step is skipped if message is blank.
+        # This step loops forever if count was set to 0.
+        if args.message:
+            publish_count = 1
+
+            message = payload
+
+            print("Publishing message to topic '{}': {}".format(args.topic, message))
+            message_json = json.dumps(message)
+            print(message_json)
+            mqtt_connection.publish(
+                topic=args.topic,
+                payload=message_json,
+                qos=mqtt.QoS.AT_LEAST_ONCE)
+            time.sleep(1)
+            publish_count += 1
+
+        # Wait for all messages to be received.
+        # This waits forever if count was set to 0.
+        if args.count != 0 and not received_all_event.is_set():
+            print("Waiting for all messages to be received...")
+
+        received_all_event.wait()
+        print("{} message(s) received.".format(received_count))
+
+        timer = int(time.time())
+
+
 if __name__ == '__main__':
-    # Spin up resources
-    event_loop_group = io.EventLoopGroup(1)
-    host_resolver = io.DefaultHostResolver(event_loop_group)
-    client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver)
+    try:
+        # Spin up resources
+        event_loop_group = io.EventLoopGroup(1)
+        host_resolver = io.DefaultHostResolver(event_loop_group)
+        client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver)
 
-    proxy_options = None
-    if (args.proxy_host):
-        proxy_options = http.HttpProxyOptions(host_name=args.proxy_host, port=args.proxy_port)
+        proxy_options = None
+        if (args.proxy_host):
+            proxy_options = http.HttpProxyOptions(host_name=args.proxy_host, port=args.proxy_port)
 
-    if args.use_websocket == True:
-        credentials_provider = auth.AwsCredentialsProvider.new_default_chain(client_bootstrap)
-        mqtt_connection = mqtt_connection_builder.websockets_with_default_aws_signing(
-            endpoint=args.endpoint,
-            client_bootstrap=client_bootstrap,
-            region=args.signing_region,
-            credentials_provider=credentials_provider,
-            http_proxy_options=proxy_options,
-            ca_filepath=args.root_ca,
-            on_connection_interrupted=on_connection_interrupted,
-            on_connection_resumed=on_connection_resumed,
-            client_id=args.client_id,
-            clean_session=False,
-            keep_alive_secs=30)
+        if args.use_websocket == True:
+            credentials_provider = auth.AwsCredentialsProvider.new_default_chain(client_bootstrap)
+            mqtt_connection = mqtt_connection_builder.websockets_with_default_aws_signing(
+                endpoint=args.endpoint,
+                client_bootstrap=client_bootstrap,
+                region=args.signing_region,
+                credentials_provider=credentials_provider,
+                http_proxy_options=proxy_options,
+                ca_filepath=args.root_ca,
+                on_connection_interrupted=on_connection_interrupted,
+                on_connection_resumed=on_connection_resumed,
+                client_id=args.client_id,
+                clean_session=False,
+                keep_alive_secs=30)
 
-    else:
-        mqtt_connection = mqtt_connection_builder.mtls_from_path(
-            endpoint=args.endpoint,
-            port=args.port,
-            cert_filepath=args.cert,
-            pri_key_filepath=args.key,
-            client_bootstrap=client_bootstrap,
-            ca_filepath=args.root_ca,
-            on_connection_interrupted=on_connection_interrupted,
-            on_connection_resumed=on_connection_resumed,
-            client_id=args.client_id,
-            clean_session=False,
-            keep_alive_secs=30,
-            http_proxy_options=proxy_options)
+        else:
+            mqtt_connection = mqtt_connection_builder.mtls_from_path(
+                endpoint=args.endpoint,
+                port=args.port,
+                cert_filepath=args.cert,
+                pri_key_filepath=args.key,
+                client_bootstrap=client_bootstrap,
+                ca_filepath=args.root_ca,
+                on_connection_interrupted=on_connection_interrupted,
+                on_connection_resumed=on_connection_resumed,
+                client_id=args.client_id,
+                clean_session=False,
+                keep_alive_secs=30,
+                http_proxy_options=proxy_options)
 
-    print("Connecting to {} with client ID '{}'...".format(
-        args.endpoint, args.client_id))
+        print("Connecting to {} with client ID '{}'...".format(
+            args.endpoint, args.client_id))
 
-    connect_future = mqtt_connection.connect()
+        connect_future = mqtt_connection.connect()
 
-    # Future.result() waits until a result is available
-    connect_future.result()
-    print("Connected!")
+        # Future.result() waits until a result is available
+        connect_future.result()
+        print("Connected!")
 
-    # Subscribe
-    print("Subscribing to topic '{}'...".format(args.topic))
-    subscribe_future, packet_id = mqtt_connection.subscribe(
-        topic=args.topic,
-        qos=mqtt.QoS.AT_LEAST_ONCE,
-        callback=on_message_received)
+        # Subscribe
+        print("Subscribing to topic '{}'...".format(args.topic))
+        subscribe_future, packet_id = mqtt_connection.subscribe(
+            topic=args.topic,
+            qos=mqtt.QoS.AT_LEAST_ONCE,
+            callback=on_message_received)
 
-    subscribe_result = subscribe_future.result()
-    print("Subscribed with {}".format(str(subscribe_result['qos'])))
+        subscribe_result = subscribe_future.result()
+        print("Subscribed with {}".format(str(subscribe_result['qos'])))
 
-    # Start timer for sending current volume state to AWS
-    AWS_timer = int(time.time())
 
-    HOST = "192.168.1.12"  # Standard loopback interface address (localhost)
-    PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
-
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((HOST, PORT))
-    s.listen()
-    # Loop audio stream continuously
-    while True:
-        try:
-            conn, addr = s.accept()
-            print(f"Connected by {addr}")
-            data = conn.recv(1024)
-            data = json.loads(data.decode('utf-8'))
-            print(data)
-            if not data:
-                break
-            # conn.sendall(data)
-
-            if int(time.time()) - AWS_timer > 180:
-                # Publish message to server desired number of times.
-                # This step is skipped if message is blank.
-                # This step loops forever if count was set to 0.
-                if args.message:
-                    publish_count = 1
-
-                    # message = "{} [{}]".format(args.message, publish_count)
-                    # print(f'AUDIO_STATE: {state}')
-
-                    message = data
-
-                    # message = makePayload()
-                    # message2 = getDistance()
-                    # message.update(message2)
-                    print("Publishing message to topic '{}': {}".format(args.topic, message))
-                    message_json = json.dumps(message)
-                    print(message_json)
-                    mqtt_connection.publish(
-                        topic=args.topic,
-                        payload=message_json,
-                        qos=mqtt.QoS.AT_LEAST_ONCE)
-                    time.sleep(1)
-                    publish_count += 1
-
-                # Wait for all messages to be received.
-                # This waits forever if count was set to 0.
-                if args.count != 0 and not received_all_event.is_set():
-                    print("Waiting for all messages to be received...")
-
-                received_all_event.wait()
-                print("{} message(s) received.".format(received_count))
-
-                AWS_timer = int(time.time())
-
-        except KeyboardInterrupt:
-            print('\n\nI\'m gonna end it all')
-            sys.exit()
-        except Exception as e:
-            print(e)
-
-    # Disconnect
-    print("Disconnecting...")
-    disconnect_future = mqtt_connection.disconnect()
-    disconnect_future.result()
-    print("Disconnected!")
+        # PMQTT
+        client = pmqtt.Client("digi_mqtt_test")  # Create instance of client with client ID “digi_mqtt_test”
+        client.on_connect = on_connect  # Define callback function for successful connection
+        client.on_message = on_message  # Define callback function for receipt of a message
+        # client.connect("m2m.eclipse.org", 1883, 60)  # Connect to (broker, port, keepalive-time)
+        client.connect('192.168.1.12')
+        client.loop_forever()  # Start networking daemon
+            
+    except KeyboardInterrupt:
+        print('\n\nI\'m gonna end it all')
+        # Disconnect
+        print("Disconnecting...")
+        disconnect_future = mqtt_connection.disconnect()
+        disconnect_future.result()
+        print("Disconnected!")
+        sys.exit()
+    except Exception as e:
+        print(e)
+        # Disconnect
+        print("Disconnecting...")
+        disconnect_future = mqtt_connection.disconnect()
+        disconnect_future.result()
+        print("Disconnected!")
+        sys.exit()

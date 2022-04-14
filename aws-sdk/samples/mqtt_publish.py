@@ -20,6 +20,7 @@
 '''
 
 import paho.mqtt.client as mqtt
+import json
 
 # What to do on a publish event
 
@@ -44,8 +45,8 @@ for i in range(100):
 
     try:
         client.connect(broker)
-        message = "HELLO SLUT " + str(i)
-        ret, mid = client.publish('mqttdonald', message)
+        message = {"noise": 0, "temp": 28.08}
+        ret, mid = client.publish('mqttdonald', json.dumps(message))
 
         client.loop_start()
 
@@ -55,8 +56,8 @@ for i in range(100):
         while(client.is_published == False):
             pass
 
-    except BaseException:
-        print('Could not connect to broker')
+    except Exception as e:
+        print(e)
         exit(1)
 
 client.disconnect()
