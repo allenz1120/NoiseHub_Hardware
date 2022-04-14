@@ -209,8 +209,8 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print('\n\nI\'m gonna end it all')
             sys.exit()
-        except:
-            print('Microphone sensor error')
+        except Exception as e:
+            print(e)
 
     # Disconnect
     print("Disconnecting...")
