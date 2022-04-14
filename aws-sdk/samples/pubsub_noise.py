@@ -117,7 +117,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH messag
     payload['temp'] += msg['temp']
 
     if int(time.time()) - timer > 5:
-        payload['noise'] /= counter
+        payload['noise'] = round(payload['noise'] / counter)
         payload['temp'] /= counter
         # Publish message to server desired number of times.
         # This step is skipped if message is blank.
@@ -146,6 +146,9 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH messag
         print("{} message(s) received.".format(received_count))
 
         timer = int(time.time())
+        counter = 0
+        payload['noise'] = 0
+        payload['temp'] = 0
 
 
 if __name__ == '__main__':

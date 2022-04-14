@@ -139,10 +139,9 @@ if __name__ == '__main__':
                     print(e)
                     exit(1)
 
-            client.disconnect()
-            exit(0)
+                client.disconnect()
 
-                client_timer = int(time.time())
+            client_timer = int(time.time())
 
             time.sleep(POLLING_INTERVAL) 
         except KeyboardInterrupt:
@@ -150,4 +149,3 @@ if __name__ == '__main__':
             sys.exit()
         except Exception as e:
             print(e)
-            
