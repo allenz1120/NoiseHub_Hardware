@@ -7,7 +7,7 @@ import numpy as np
 import socket
 import json
 sys.path.insert(1, '/home/pi/NoiseHub_Hardware/noiseHub')
-from thermistor import read_temp
+# from thermistor import read_temp
 
 if __name__ == '__main__':
     # Noise script ENUMS
