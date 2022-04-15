@@ -10,4 +10,4 @@ pip install -r requirements.txt
 
 cd aws-sdk/samples
 
-python3 noise_client.py
+screen -d -m python3 noise_client.py
