@@ -8,7 +8,7 @@ import socket
 import json
 import paho.mqtt.client as mqtt
 sys.path.insert(1, '/home/pi/NoiseHub_Hardware/noiseHub')
-# from thermistor import read_temp
+from thermistor import read_temp
 
 def on_publish(client, userdata, mid):
     print('Data published\n')
@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
                 try:
                     client.connect(broker)
-                    message = {"noise": state, "temp": 28.08}
+                    message = {"noise": state, "temp": read_temp()}
                     ret, mid = client.publish('mqttdonald', json.dumps(message))
 
                     client.loop_start()
