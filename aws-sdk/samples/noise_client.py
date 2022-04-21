@@ -123,8 +123,10 @@ if __name__ == '__main__':
                 # Connect to the broker and attempt to publish (default QoS = 0)
 
                 try:
+                    temp = read_temp()
                     client.connect(broker)
-                    message = {"noise": state, "temp": read_temp()}
+                    message = {"noise": state, "temp": temp}
+                    # message = {"noise": 0, "temp": 28.08}
                     ret, mid = client.publish('mqttdonald', json.dumps(message))
 
                     client.loop_start()
@@ -139,13 +141,14 @@ if __name__ == '__main__':
                     print(e)
                     exit(1)
 
-                client.disconnect()
 
                 client_timer = int(time.time())
 
             time.sleep(POLLING_INTERVAL) 
         except KeyboardInterrupt:
             print('\n\nI\'m gonna end it all')
+            client.disconnect()
             sys.exit()
         except Exception as e:
+            client.disconnect()
             print(e)
