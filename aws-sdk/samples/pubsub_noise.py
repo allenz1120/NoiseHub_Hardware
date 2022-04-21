@@ -116,7 +116,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH messag
     payload['noise'] += msg['noise']
     payload['temp'] += msg['temp']
 
-    if int(time.time()) - timer > 5:
+    if int(time.time()) - timer > 10:
         payload['noise'] = round(payload['noise'] / counter)
         payload['temp'] /= counter
         # Publish message to server desired number of times.
@@ -139,17 +139,16 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH messag
 
         # Wait for all messages to be received.
         # This waits forever if count was set to 0.
-        if args.count != 0 and not received_all_event.is_set():
-            print("Waiting for all messages to be received...")
+        # if args.count != 0 and not received_all_event.is_set():
+        #     print("Waiting for all messages to be received...")
 
-        received_all_event.wait()
-        print("{} message(s) received.".format(received_count))
+        # received_all_event.wait()
+        # print("{} message(s) received.".format(received_count))
 
         timer = int(time.time())
         counter = 0
         payload['noise'] = 0
         payload['temp'] = 0
-
 
 if __name__ == '__main__':
     try:
