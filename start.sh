@@ -6,6 +6,8 @@ sudo apt-get install -y ffmpeg libav-tools
 
 sudo apt-get install -y python3-pip
 
+sudo apt-get install -y screen
+
 pip install -r requirements.txt
 
 cd aws-sdk/samples

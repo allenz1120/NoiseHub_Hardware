@@ -14,7 +14,6 @@ import numpy as np
 import statistics
 import math
 import paho.mqtt.client as pmqtt
-# import socket
 
 # This sample uses the Message Broker for AWS IoT to send and receive messages
 # through an MQTT connection. On startup, the device connects to the server,
@@ -149,6 +148,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH messag
         counter = 0
         payload['noise'] = 0
         payload['temp'] = 0
+
 
 if __name__ == '__main__':
     try:

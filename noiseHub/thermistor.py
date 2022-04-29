@@ -2,8 +2,8 @@ import os
 import glob
 import time
  
-os.system('modprobe w1-gpio')
-os.system('modprobe w1-therm')
+os.system('sudo modprobe w1-gpio')
+os.system('sudo modprobe w1-therm')
  
 base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
@@ -18,7 +18,7 @@ def read_temp_raw():
 def read_temp():
     lines = read_temp_raw()
     while lines[0].strip()[-3:] != 'YES':
-        time.sleep(0.2)
+        time.sleep(1)
         lines = read_temp_raw()
     equals_pos = lines[1].find('t=')
     if equals_pos != -1:
@@ -32,4 +32,4 @@ def makePayload():
 	temp = "{:.2f}".format(temp[1])
 	payload = {"device_id": "raspberry-pi-1", "location":"Senior Design", "temperature": temp}
 	return payload
-#print(read_temp())
+# print(read_temp())

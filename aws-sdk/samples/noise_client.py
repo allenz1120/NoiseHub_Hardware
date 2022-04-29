@@ -10,6 +10,7 @@ import paho.mqtt.client as mqtt
 sys.path.insert(1, '/home/pi/NoiseHub_Hardware/noiseHub')
 from thermistor import read_temp
 
+
 def on_publish(client, userdata, mid):
     print('Data published\n')
     client.is_published = True
@@ -139,7 +140,7 @@ if __name__ == '__main__':
 
                 except Exception as e:
                     print(e)
-                    exit(1)
+                    # exit(1)
 
 
                 client_timer = int(time.time())
