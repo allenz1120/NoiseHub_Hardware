@@ -13,8 +13,8 @@ def data_analysis():
 
     client = boto3.client(
         service_name='timestream-query',
-        aws_access_key_id='AKIATBZ4AXFKY6TU65XT',
-        aws_secret_access_key='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',
+        aws_access_key_id=None,
+        aws_secret_access_key=None,
         region_name=REGION,
     )
 
@@ -239,8 +239,8 @@ def data_analysis():
 
     # print(dynamo_data)
 
-    DYNAMO_ACCESS_KEY='AKIATBZ4AXFK4PYG3MUR'
-    DYNAMO_SECRET_KEY='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'
+    DYNAMO_ACCESS_KEY=None
+    DYNAMO_SECRET_KEY=None
     TABLE_NAME='spaceTable'
     UUID="113"
 
