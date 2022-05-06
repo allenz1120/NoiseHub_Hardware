@@ -216,7 +216,7 @@ if __name__ == '__main__':
         client.on_connect = on_connect  # Define callback function for successful connection
         client.on_message = on_message  # Define callback function for receipt of a message
         # client.connect("m2m.eclipse.org", 1883, 60)  # Connect to (broker, port, keepalive-time)
-        client.connect('192.168.1.12')
+        client.connect('10.192.14.147')
         client.loop_forever()  # Start networking daemon
             
     except KeyboardInterrupt:

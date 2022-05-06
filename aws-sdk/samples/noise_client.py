@@ -46,7 +46,7 @@ if __name__ == '__main__':
     num_samples = 0
 
     # Server for central pi
-    HOST = "192.168.1.12"  # The server's hostname or IP address
+    HOST = "10.192.14.147"  # The server's hostname or IP address
     PORT = 65432  # The port used by the server
 
     # Start timer for sending current volume state to AWS
@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
 
             if int(time.time()) - client_timer > 3:
-                broker = '192.168.1.12'  # Broker's IP address
+                broker = '10.192.14.147'  # Broker's IP address
                 port = ''  # Broker's port address (not necessary as defaults to 1883)
 
                 mqtt.Client.is_published = False
