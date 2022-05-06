@@ -115,7 +115,7 @@ def on_message(client, userdata, msg):  # The callback for when a PUBLISH messag
     payload['noise'] += msg['noise']
     payload['temp'] += msg['temp']
 
-    if int(time.time()) - timer > 10:
+    if int(time.time()) - timer > 60:
         payload['noise'] = round(payload['noise'] / counter)
         payload['temp'] /= counter
         # Publish message to server desired number of times.

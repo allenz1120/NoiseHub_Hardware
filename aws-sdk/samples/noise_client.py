@@ -112,7 +112,7 @@ if __name__ == '__main__':
                 num_samples = 0
 
 
-            if int(time.time()) - client_timer > 3:
+            if int(time.time()) - client_timer > 10:
                 broker = '10.192.14.147'  # Broker's IP address
                 port = ''  # Broker's port address (not necessary as defaults to 1883)
 
